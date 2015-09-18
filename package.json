@@ -1,0 +1,13 @@
+{
+	"name": "game",
+	"main": "code/html/game.html",
+  "window": {
+    "title": "RGB",
+    "width": 960,
+    "height": 672,
+		"toolbar": false,
+    "frame": false,
+		"resizable": false,
+    "position": "center"
+  }
+}

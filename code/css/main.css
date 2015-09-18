@@ -1,0 +1,28 @@
+html, body{
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+header{
+  height: 30px;
+  overflow: hidden;
+  background-color: black;
+  -webkit-app-region: drag;
+}
+
+button{
+    float: right;
+    -webkit-app-region: no-drag;
+    color: silver;
+    font-size:1.5em;
+    background: none;
+    border: none;
+    transition: all 1s;
+}
+
+button:hover{
+  color: white;
+}
