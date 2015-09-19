@@ -4,8 +4,8 @@ var game = new Phaser.Game(960, 642, Phaser.AUTO, '', { preload: preload, create
 function preload() {
 	game.load.image('sky','../../assets/img/Sky.jpg');
 	game.load.image('ground','../../assets/img/Ground.png');
-	game.load.spritesheet('hero', '../../assets/img/Hero.png', 65, 68);
-
+	game.load.spritesheet('hero', '../../assets/img/myHero.png',74,74);
+	game.load.image('arrow','../../assets/img/arrow.png');
 	game.load.script('Gray', '../../assets/filters/Gray.js');
 	game.load.script('filterX', '../../assets/filters/FilterX.js');
 	game.load.script('filterY', '../../assets/filters/FilterY.js');
@@ -19,8 +19,10 @@ var player;
 var cursors;
 var filters;
 var pause;
-
-var playing
+var shootAnimationTime=0;
+var isShooting=false;
+var playing;
+var arrows;
 
 function create() {
 
@@ -55,20 +57,26 @@ function create() {
 	ground.body.immovable = true;
 	ground.scale.setTo(.6,.6);
 
+	arrows=game.add.group();
+	arrows.enableBody=true;
+	//arrows.scale.setTo(0.6,1);
 	// players
 	player = [];
 
 	for (var i = 0; i < 3; i++) {
 		player[i] = game.add.sprite(0, 0, 'hero');
-	  player[i].scale.setTo(.6,.6);
+	  	player[i].scale.setTo(.6,.6);
 		player[i].anchor.setTo(.5,0);
-		player[i].animations.add('stand', [0,1,2,3,4], 7);
-		player[i].animations.add('walk', [5,6,7,8], 6);
-		player[i].animations.add('jump', [10]);
+		player[i].animations.add('stand', [0,1,2,3,4], 7,true);
+		player[i].animations.add('shoot', [5,6,7], 7);
+		player[i].animations.add('walk', [10,11,12,13],6);
+		player[i].animations.add('jump', [15]);
 		game.physics.arcade.enable(player[i]);
 		player[i].body.gravity.y = 900;
 		player[i].body.collideWorldBounds = true;
+		player[i].animations.play('stand');
 	}
+	
 
 	groupR.add(player[0]);
 	groupG.add(player[1]);
@@ -118,43 +126,38 @@ function update() {
 	game.physics.arcade.collide(groupR, groupR);
 	game.physics.arcade.collide(groupG, groupG);
 	game.physics.arcade.collide(groupB, groupB);
+	game.physics.arcade.collide(groupR,arrows);
 
-	player[playing].body.velocity.x = 0;
+	PlayerMovementController();
+	Shoot();
+	PlayerSelect();
+	PauseManager();
+	ArrowBehaviour();
+}
 
-	if (cursors.left.isDown) {
-
-		player[playing].body.velocity.x = -150;
-		player[playing].scale.x = Math.abs(player[playing].scale.x);
-		player[playing].animations.play('walk');
-
-	} else if (cursors.right.isDown) {
-
-		player[playing].body.velocity.x = 150;
-		player[playing].scale.x = -Math.abs(player[playing].scale.x);
-		player[playing].animations.play('walk');
-
+function Shoot(){
+	if(cursors.action.isDown&&!isShooting){
+		player[playing].animations.play('shoot');
+		isShooting=true;
+		shootAnimationTime=0;
+		var h=player[playing].body.position.y+(player[playing].height/2);
+		var a=arrows.create(player[playing].body.position.x,h,'arrow');
+		a.body.velocity.x=500;
+		a.scale.setTo(0.8,0.8);
+	}else{
+		shootAnimationTime+=game.time.elapsed;
+		if(shootAnimationTime>500)
+			isShooting=false;
 	}
 
-	//  Allow the player to jump if they are touching the ground.
-	if (cursors.up.isDown && player[playing].body.touching.down){
-		player[playing].body.velocity.y = -350;
-	}
+}
 
-	if(cursors.action.isDown){
-		// Mecanica
-	}
+function ArrowBehaviour(){
+	
+}
 
-	if (cursors.change[0].isDown) {
-		player[playing].body.velocity.x = 0;
-		playing = 0;
-	} else if (cursors.change[1].isDown) {
-		player[playing].body.velocity.x = 0;
-		playing = 1;
-	} else if (cursors.change[2].isDown) {
-		player[playing].body.velocity.x = 0;
-		playing = 2;
-	}
 
+function PauseManager(){
 	if(cursors.esc.isDown){
 		pause.visible = true;
 		game.paused = true;
@@ -182,10 +185,47 @@ function update() {
 			}
 		},1000/60);
 	}
+}
 
+function PlayerSelect(){
+	if (cursors.change[0].isDown) {
+		player[playing].body.velocity.x = 0;
+		playing = 0;
+	} else if (cursors.change[1].isDown) {
+		player[playing].body.velocity.x = 0;
+		playing = 1;
+	} else if (cursors.change[2].isDown) {
+		player[playing].body.velocity.x = 0;
+		playing = 2;
+	}
+}
+
+function PlayerMovementController(){
+	player[playing].body.velocity.x = 0;
+
+	if (cursors.left.isDown) {
+
+		player[playing].body.velocity.x = -150;
+		player[playing].scale.x = Math.abs(player[playing].scale.x);
+		player[playing].animations.play('walk');
+
+	} else if (cursors.right.isDown) {
+
+		player[playing].body.velocity.x = 150;
+		player[playing].scale.x = -Math.abs(player[playing].scale.x);
+		player[playing].animations.play('walk');
+
+	}
+	if (cursors.up.isDown && player[playing].body.touching.down){
+		player[playing].body.velocity.y = -350;
+		player[playing].animations.play('jump');
+	}else if((player[playing].body.touching.down )&&( player[playing].body.velocity.x==0)&&!isShooting){
+		player[playing].animations.play('stand');
+	}	
+	/*
 	for(var i = 0; i < 3; i++){
 		if( player[i].body.velocity.x == 0 ) player[i].animations.play('stand');
 		if( !player[i].body.touching.down ) player[i].animations.play('jump');
-	}
+	}*/
 
 }
