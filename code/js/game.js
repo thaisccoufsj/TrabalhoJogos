@@ -1,5 +1,5 @@
 
-var game = new Phaser.Game(960, 642, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(960, 642, Phaser.CANVAS, '', { preload: preload, create: create, update: update });
 
 function preload() {
 	game.load.image('sky','../../assets/img/Sky.jpg');
@@ -67,7 +67,7 @@ function create() {
 		player[i] = game.add.sprite(0, 0, 'hero');
 	  	player[i].scale.setTo(.6,.6);
 		player[i].anchor.setTo(.5,0);
-		player[i].animations.add('stand', [0,1,2,3,4], 7,true);
+		player[i].animations.add('stand', [0,1,2,3,4], 6,true);
 		player[i].animations.add('shoot', [5,6,7], 7);
 		player[i].animations.add('walk', [10,11,12,13],6);
 		player[i].animations.add('jump', [15]);
@@ -75,6 +75,7 @@ function create() {
 		player[i].body.gravity.y = 900;
 		player[i].body.collideWorldBounds = true;
 		player[i].animations.play('stand');
+		player[i].body.setSize(72,65);
 	}
 	
 
@@ -88,8 +89,10 @@ function create() {
 	cursors = {};
 	cursors.left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
 	cursors.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-	cursors.up = game.input.keyboard.addKey(Phaser.Keyboard.Z);
+	cursors.jump = game.input.keyboard.addKey(Phaser.Keyboard.Z);
 	cursors.action = game.input.keyboard.addKey(Phaser.Keyboard.X);
+	/*cursors.up = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+	cursors.down = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);*/
 
 	cursors.change = [];
 	cursors.change[0] = game.input.keyboard.addKey(Phaser.Keyboard.A);
@@ -118,6 +121,7 @@ function create() {
 	pause.add(text);
 	text.updateText();
 	text.position.x -= ( text.width / 2 );
+	
 }
 
 function update() {
@@ -128,15 +132,17 @@ function update() {
 	game.physics.arcade.collide(groupB, groupB);
 	game.physics.arcade.collide(groupR,arrows);
 
+
 	PlayerMovementController();
 	Shoot();
 	PlayerSelect();
 	PauseManager();
 	ArrowBehaviour();
+	
 }
 
 function Shoot(){
-	if(cursors.action.isDown&&!isShooting){
+	if(cursors.action.isDown&&!isShooting&&(player[playing].body.velocity.x==0)){
 		player[playing].animations.play('shoot');
 		isShooting=true;
 		shootAnimationTime=0;
@@ -153,7 +159,7 @@ function Shoot(){
 }
 
 function ArrowBehaviour(){
-	
+	//arrows.body.rotation = Math.atan2(arrows.body.velocity.y, arrows.body.velocity.x);
 }
 
 
@@ -216,16 +222,15 @@ function PlayerMovementController(){
 		player[playing].animations.play('walk');
 
 	}
-	if (cursors.up.isDown && player[playing].body.touching.down){
+	if (cursors.jump.isDown && player[playing].body.touching.down){
 		player[playing].body.velocity.y = -350;
 		player[playing].animations.play('jump');
 	}else if((player[playing].body.touching.down )&&( player[playing].body.velocity.x==0)&&!isShooting){
 		player[playing].animations.play('stand');
 	}	
-	/*
-	for(var i = 0; i < 3; i++){
-		if( player[i].body.velocity.x == 0 ) player[i].animations.play('stand');
-		if( !player[i].body.touching.down ) player[i].animations.play('jump');
-	}*/
 
+	if(!player[playing].body.touching.down){
+		player[playing].animations.play('jump');
+	}
+	
 }
