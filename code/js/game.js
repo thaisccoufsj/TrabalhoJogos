@@ -23,6 +23,7 @@ var shootAnimationTime=0;
 var isShooting=false;
 var playing;
 var arrows;
+var lookingRight=true;
 
 function create() {
 
@@ -59,8 +60,8 @@ function create() {
 
 	arrows=game.add.group();
 	arrows.enableBody=true;
-	//arrows.scale.setTo(0.6,1);
-	// players
+	//arrows.scale.setTo(-1,1);
+	
 	player = [];
 
 	for (var i = 0; i < 3; i++) {
@@ -126,6 +127,11 @@ function create() {
 
 function update() {
 
+	game.physics.arcade.collide(groupR, groupR);
+	game.physics.arcade.collide(groupG, groupG);
+	game.physics.arcade.collide(groupB, groupB);
+	game.physics.arcade.collide(groupR,arrows);
+
 	PlayerMovementController();
 	Shoot();
 	PlayerSelect();
@@ -134,12 +140,7 @@ function update() {
 	
 }
 
-function Colliders(){
-	game.physics.arcade.collide(groupR, groupR);
-	game.physics.arcade.collide(groupG, groupG);
-	game.physics.arcade.collide(groupB, groupB);
-	game.physics.arcade.collide(groupR,arrows);
-}
+	
 
 function Shoot(){
 	if(cursors.action.isDown&&!isShooting&&(player[playing].body.velocity.x==0)){
@@ -148,8 +149,13 @@ function Shoot(){
 		shootAnimationTime=0;
 		var h=player[playing].body.position.y+(player[playing].height/2);
 		var a=arrows.create(player[playing].body.position.x,h,'arrow');
-		a.body.velocity.x=500;
-		a.scale.setTo(0.8,0.8);
+		if(lookingRight){
+			a.body.velocity.x=500;
+			a.scale.setTo(0.8,0.8);
+		}else if(!lookingRight){
+			a.body.velocity.x=-500;
+			a.scale.setTo(-0.8,0.8);
+		}
 	}else{
 		shootAnimationTime+=game.time.elapsed;
 		if(shootAnimationTime>500)
@@ -214,13 +220,14 @@ function PlayerMovementController(){
 		player[playing].body.velocity.x = -150;
 		player[playing].scale.x = Math.abs(player[playing].scale.x);
 		player[playing].animations.play('walk');
+		lookingRight=false;
 
 	} else if (cursors.right.isDown) {
 
 		player[playing].body.velocity.x = 150;
 		player[playing].scale.x = -Math.abs(player[playing].scale.x);
 		player[playing].animations.play('walk');
-
+		lookingRight=true;
 	}
 	if (cursors.jump.isDown && player[playing].body.touching.down){
 		player[playing].body.velocity.y = -350;
