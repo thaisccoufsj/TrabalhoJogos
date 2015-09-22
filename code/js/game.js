@@ -126,19 +126,19 @@ function create() {
 
 function update() {
 
-	//  Collide the player and the stars with the platforms
-	game.physics.arcade.collide(groupR, groupR);
-	game.physics.arcade.collide(groupG, groupG);
-	game.physics.arcade.collide(groupB, groupB);
-	game.physics.arcade.collide(groupR,arrows);
-
-
 	PlayerMovementController();
 	Shoot();
 	PlayerSelect();
 	PauseManager();
 	ArrowBehaviour();
 	
+}
+
+function Colliders(){
+	game.physics.arcade.collide(groupR, groupR);
+	game.physics.arcade.collide(groupG, groupG);
+	game.physics.arcade.collide(groupB, groupB);
+	game.physics.arcade.collide(groupR,arrows);
 }
 
 function Shoot(){
