@@ -4,7 +4,12 @@
 		<meta charset="UTF-8" />
 	  <title> RGB </title>
 		<link rel="stylesheet" href="../css/main.css" media="screen" title="no title" charset="utf-8">
-		<script type="text/javascript" src="../js/phaser.min.js"></script>
+		<script type="text/javascript" src="../js/phaser.js"></script>
+		<script src="../js/play.js" charset="utf-8"></script>
+		<script src="../js/menu.js" charset="utf-8"></script>
+		<script src="../js/boot.js" charset="utf-8"></script>
+		<script src="../js/game.js" charset="utf-8"></script>
+
 		<script type="text/javascript">
 			var gui = require('nw.gui');
 			var win = gui.Window.get();
@@ -17,6 +22,7 @@
 	      <button onclick=win.showDevTools() style="float:left">?</button>
 	      <button onclick=win.reloadIgnoringCache() style="float:left">*</button>
 	  </header>
-		<script src="../js/game.js" charset="utf-8"></script>
+		<main id="gameArea">
+		</main>
 	</body>
 </html>
