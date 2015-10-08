@@ -20,7 +20,12 @@ var canDefend = true;
 var standAnim = true;
 var canMove = true;
 
-var ligthBeams;
+//Light Beam Reflection point:
+var p = new Phaser.Point();
+
+var lightStart;
+var lightEnd;
+var lights;
 
 var lfx;
 
@@ -61,6 +66,14 @@ var playState = {
 				case 1:
 					arrows=game.add.group();
 					arrows.enableBody=true;
+					break;
+
+				case 2:
+					lights = [];
+					lights[0] = game.add.tileSprite(0,0,10,0,'lbeam')
+					lights[0].anchor.setTo(.5,0)
+					lights[1] = game.add.tileSprite(0,0,10,0,'lbeam')
+					lights[1].anchor.setTo(.5,0)
 					break;
 			}
 		}
@@ -144,6 +157,20 @@ var playState = {
 
 		text.updateText();
 		text.position.x -= ( text.width / 2 );
+
+		//Light Beam
+		handle1 = game.add.sprite(186.0, 601.0, '', 0);
+		handle1.anchor.set(0.5);
+		handle1.inputEnabled = true;
+
+		handle2 = game.add.sprite(378.0, 427.0, '', 0);
+		handle2.anchor.set(0.5);
+		handle2.inputEnabled = true;
+
+		line1 = new Phaser.Line(handle1.x, handle1.y, handle2.x, handle2.y);
+		line2 = new Phaser.Line(groups[2].player.x, groups[2].player.y, groups[2].player.x, groups[2].player.x+30);
+
+		reflection = new Phaser.Line(0, 0, 0, 0);
 	},
 
 	update: function() {
@@ -205,7 +232,7 @@ var playState = {
 					case 2:
 					if(groups[playing].player.body.touching.down && groups[playing].player.body.velocity.x == 0 && canDefend){
 						isReflecting = !isReflecting;
-						canMove = !canMove;
+						//canMove = !canMove;
 						standAnim = !standAnim;
 						canDefend = false;
 						reflectAnimationTime = 0;
@@ -311,5 +338,49 @@ var playState = {
 			if( groups[i].player.body.velocity.x == 0 && standAnim) groups[i].player.animations.play('stand');
 			if( !groups[i].player.body.touching.down ) groups[i].player.animations.play('jump');
 		}
+
+		//Light Beams Updates:
+
+		//game.debug.geom(line1, '#ffff00');
+		//game.debug.geom(line2, '#9999ff');
+
+
+		line2.start.x = groups[2].player.x + 15;
+		line2.start.y = groups[2].player.y + 40;
+		line2.end.x = groups[2].player.x + 15;
+		line2.end.y = groups[2].player.y + 0;
+
+		p = line2.intersects(line1, true);
+
+		lights[1].visible = false;
+		if (p) {
+			lights[1].visible = true;
+			var outgoing = line2.reflect(line1);
+
+			reflection.fromAngle(p.x, p.y, outgoing, 200);
+
+			line1.start.x = reflection.start.x;
+			line1.start.y = reflection.start.y;
+
+			line3 = new Phaser.Line(reflection.start.x, reflection.start.y, reflection.end.x, reflection.end.y);
+
+			lights[1].x = line3.start.x;
+			lights[1].y = line3.start.y;
+			lights[1].angle = Math.atan2((line3.end.y - line3.start.y), (line3.end.x - line3.start.x)) * 180 / Math.PI - 90;
+			lights[1].height = line3.length;
+
+			//game.debug.geom(line3, '#ffff00');
+		}
+		else {
+			line1.start.x = handle1.x;
+			line1.start.y = handle1.y;
+
+		}
+
+		lights[0].x = line1.end.x;
+		lights[0].y = line1.end.y;
+		lights[0].angle = -(180/Math.PI) * line1.angle + 5.5;
+		lights[0].height = line1.length;
+
 	}
 }
