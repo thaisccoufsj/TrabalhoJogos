@@ -6,6 +6,7 @@ var menuState = {
   keypress : null,
 
   create: function(){
+    
     var bg = game.add.sprite(0,0,'storyBG');
 
     for (var i = 0; i < 9; i++) {

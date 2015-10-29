@@ -8,6 +8,7 @@ var bootState = {
   	game.load.spritesheet('hero0', '../../assets/img/HeroRed.png', 99, 71);
     game.load.spritesheet('hero1', '../../assets/img/HeroGreen.png', 56, 72);
     game.load.spritesheet('hero2', '../../assets/img/HeroBlue.png', 56, 68);
+    game.load.spritesheet('dog','../../assets/img/enemy/dog.png',94,60);
 
     game.load.image('arrow','../../assets/img/arrow.png');
     game.load.image('lfx','../../assets/img/Light.png');
