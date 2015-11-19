@@ -9,10 +9,6 @@ var shootAnimationTime = 0;
 var isShooting = false;
 var canShoot = true;
 
-var fireAnimationTime = 0;
-var isFiring = false;
-var canFire = true;
-
 var reflectAnimationTime = 0;
 var isReflecting = false;
 var canDefend = true;
@@ -20,12 +16,20 @@ var canDefend = true;
 var standAnim = true;
 var canMove = true;
 
+var lines;
+var linebounds;
+var reflector;
+
+var button;
+var isPressed;
+
 //Light Beam Reflection point:
 var p = new Phaser.Point();
 
 var lightStart;
 var lightEnd;
 var lights;
+var cristal;
 
 var lfx;
 
@@ -39,12 +43,21 @@ var enemyDieTime=0;
 var enemyDie=false;
 var plat;
 
+var arrowShootAudio;
+var torchSound;
+var enemyHit;
+var hitAnimation=false;
+var hitTime=0; 
+
+
 var playState = {
 
 	create: function() {
 		// Groups
 		groups = []
-
+		arrowShootAudio=game.add.audio('arrow');
+		enemyHit=game.add.audio('bowHit');
+		torchSound=game.add.audio('torch',true);
 		for (var i = 0; i < 3; i++) {
 			// creates the structure of each group
 			groups[i] = {
@@ -96,14 +109,71 @@ var playState = {
 			groups[i].bg.animations.add('default', [0]);
 			groups[i].bg.animations.add('color', [i + 1]);
 
-			temp = groups[i].platforms.create(0, ((i + 1) * 213) - (68 * 0.6), 'ground');
+		}
+		
+			temp = groups[0].platforms.create(0, 213 - 68 * 0.6, 'R0');
 			temp.body.immovable = true;
 			temp.scale.setTo(.6,.6);
 
-			// sets the color and grey states
-			temp.animations.add('default', [0]);
-			temp.animations.add('color', [i + 1]);
-		}
+			temp = groups[0].platforms.create(249 * 0.6, (315 - 98) * 0.6, 'R1');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[0].platforms.create(825 * 0.6, (256 - 98) * 0.6, 'R2');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[0].platforms.create(927 * 0.6, (345 - 98) * 0.6, 'R3');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[1].platforms.create(0, 213 * 2 - 68 * 0.6, 'G0');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[1].platforms.create(200, 213 * 2 - 100, 'G1');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+			temp.body.checkCollision.down = false;
+			temp.body.checkCollision.right = false;
+			temp.body.checkCollision.left = false;
+
+			temp = groups[1].platforms.create(600, 213 * 2 - 100, 'G1');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+			temp.body.checkCollision.down = false;
+			temp.body.checkCollision.right = false;
+			temp.body.checkCollision.left = false;
+
+			temp = groups[1].platforms.create(0, 213 * 2 - 68 * 0.6, 'G0');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[2].platforms.create(0, 213 * 3 - 68 * 0.6, 'B0');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[2].platforms.create(1152 * 0.6, (880 - 98) * 0.6, 'B1');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			temp = groups[2].platforms.create(1152 * 0.6, (1080 - 98) * 0.6, 'B2');
+			temp.body.immovable = true;
+			temp.scale.setTo(.6,.6);
+
+			button = groups[0].misc.create(694 * 0.6, (345 - 116) * 0.6,'button');
+			button.enableBody = true;
+			game.physics.arcade.enable(button);
+			button.body.immovable = true;
+			button.scale.setTo(.5,.6);
+			button.animations.add('press',[0,1,2,3]);
+			button.animations.add('unpress',[3,2,1,0]);
+
+			cristal = groups[2].misc.create(800,510,'crystal');
+			cristal.scale.setTo(.6,.6);
+			cristal.animations.add('stop',[0])
+			cristal.animations.add('glow',[0,1,2,3,4,5,6,7,8])
+
 
 		//Players
 		player = [];
@@ -127,26 +197,17 @@ var playState = {
 		}
 
 		//enemy
-		enemy=game.add.sprite(900,214,'dog');
+		enemy=game.add.sprite(900,220,'dog');
 		enemy.scale.setTo(.8,.8);
 		enemy.anchor.setTo(0.5, 0.5);
 		game.physics.arcade.enable(enemy);
 		enemy.enableBody=true;
 		enemy.body.gravity.y = 900;
 		enemy.body.collideWorldBounds = true;
-		enemy.animations.add('walks',[0,1,2,3,4,5],6);
+		enemy.animations.add('walks',[0,1,2,3,4],6);
 		enemy.animations.add('death',[6,7,8,9,10,11,12],6);
-		
-		//teste
-		plat=game.add.sprite(400,300,'ground');
-		plat.scale.setTo(.2,.4);
-		game.physics.arcade.enable(plat);
-		plat.enableBody=true;
-		plat.body.gravity.y=0;
-		plat.body.immovable=true;
-		plat.body.checkCollision.down = false;
-		plat.body.checkCollision.right = false;
-		plat.body.checkCollision.left = false;
+		enemy.animations.add('stand',[13,14,15,16,17,18,19,20,21],5);
+		enemy.animations.add('hit',[22,23],5);
 
 
 		groups[0].player.animations.add('fire',[10,11],3);
@@ -189,28 +250,33 @@ var playState = {
 		text.position.x -= ( text.width / 2 );
 
 		//Light Beam
-		handle1 = game.add.sprite(186.0, 601.0, '', 0);
-		handle1.anchor.set(0.5);
-		handle1.inputEnabled = true;
+		lines = []
+		lines[0] = new Phaser.Line(600,430, 600, 217*3 - (93 * .6));
+		lines[1] = new Phaser.Line(0,0,0,0);
+		linebounds = [];
+		linebounds[0] = new Phaser.Line(0,425, 960, 425);
+		linebounds[1] = new Phaser.Line(0,217*3 - (93 * .6), 960, 217*3 - (93 * .6));
+		linebounds[2] = new Phaser.Line(0,425, 0, 217*3 - (93 * .6));
+		linebounds[3] = new Phaser.Line(960,425, 960, 217*3 - (93 * .6));
 
-		handle2 = game.add.sprite(378.0, 427.0, '', 0);
-		handle2.anchor.set(0.5);
-		handle2.inputEnabled = true;
+		reflector = []
+		reflector[0] = new Phaser.Line(0,0,0,0)
+		reflector[1] = new Phaser.Line(cristal.x,cristal.y,cristal.x + cristal.width,cristal.y + cristal.height)
+	},
 
-		line1 = new Phaser.Line(handle1.x, handle1.y, handle2.x, handle2.y);
-		line2 = new Phaser.Line(groups[2].player.x, groups[2].player.y, groups[2].player.x, groups[2].player.x+30);
+	start: function(){
+		//torchSound.play('',0,0.4,true,true);
+		torchSound.loopFull(2.0);
 
-		reflection = new Phaser.Line(0, 0, 0, 0);
 	},
 
 	update: function() {
-
 		//  Collide each group with itself
 		for (var i = 0; i < 3; i++) {
 			game.physics.arcade.collide(groups[i].all, groups[i].all);
 		}
-		if(playing==1) plat.frame=2;
-		else plat.frame=0;
+		/*if(playing==1) plat.frame=2;
+		else plat.frame=0;*/
 		game.physics.arcade.collide(enemy,groups[1].platforms);
 		game.physics.arcade.collide(groups[1].player,plat);
 		groups[playing].player.body.velocity.x = 0;
@@ -222,17 +288,41 @@ var playState = {
 		pauseControll();
 		gameAnimations();	
 		lightBeamsUpdate();
-		enemyBehaviour();
+		//enemyBehaviour();
+		pressButton();
+		hitAnimationControll();
 		game.physics.arcade.overlap(arrows,enemy, enemyDamageTaken, null, this);
 		if(playing==1) game.physics.arcade.overlap(groups[1].player,enemy, playerDamageTaken, null, this);
+		audioControll();
 	}
 
 
 }
 
+function pressButton(){
+		if(groups[0].player.body.touching.down && button.body.touching.up && !isPressed){
+			button.animations.play('press');
+			isPressed = true;
+			button.body.height = button.body.height - (20*.6);
+			button.body.offset.y = 20*.6;
+			button.body.reset(button.x,button.y);
+		}else if(groups[0].player.body.touching.down && !button.body.touching.up && isPressed){
+			button.animations.play('unpress');
+			isPressed = false;
+			button.body.height = button.body.height + (20*.6);
+			button.body.offset.y = 0;
+			button.body.reset(button.x,button.y);
+		}
+}
+
+
 function enemyDamageTaken(enemy,arrow){
 	enemyLife-=1;
 	arrow.kill();
+	enemyHit.play();
+	hitAnimation=true;
+	enemy.body.velocity.x=0;
+	enemy.animations.play('hit');
 }
 
 function playerDamageTaken(player,enemy){
@@ -241,7 +331,22 @@ function playerDamageTaken(player,enemy){
 	enemy.body.position.x=900;
 }
 
+function hitAnimationControll(){
+	if(hitAnimation==false){
+		enemyBehaviour();
+	}else if(hitAnimation==true){
+		if(hitTime>300){
+			hitAnimation=false;
+			hitTime=0;
+			enemyStart();
+		}else{
+			hitTime+=game.time.elapsed;
+		}
+	}
+}
+
 function enemyBehaviour(){
+	
 	if(playing&&enemyLife>0){
 		if(enemy.position.x>=enemyLimitRight){
 			enemy.body.velocity.x=-150;
@@ -252,9 +357,16 @@ function enemyBehaviour(){
 		}
 		enemy.animations.play('walks');
 	}
+
+	if(playing!=1)
+		enemy.body.velocity.x=0;
+
+
+	if(!enemy.animations.isPlaying){
+		hitAnimation=false;
+	} 
 	if(playing!=1) {
-		enemy.animations.stop();
-		enemy.frame=1;
+		enemy.animations.play('stand');
 	}
 
 	if(enemyLife<=0&&!enemyDie){
@@ -269,78 +381,85 @@ function enemyBehaviour(){
 		if(enemyDieTime>=1100){
 			enemy.kill();
 		} 
-	}
-	
+	}	
+}
 
+function enemyStart(){
+	if(enemy.scale.x>0) enemy.body.velocity.x=-150;
+	else if(enemy.scale.x<0) enemy.body.velocity.x=150;
 }
 
 function lightBeamsUpdate(){
-	//Light Beams Updates:
+	reflector[0].start.x = groups[2].player.x + groups[2].player.width / 2;
+	reflector[0].start.y = groups[2].player.y;
+	reflector[0].end.x = groups[2].player.x - groups[2].player.width / 2;
+	reflector[0].end.y = groups[2].player.y + groups[2].player.height;
 
-		//game.debug.geom(line1, '#ffff00');
-		//game.debug.geom(line2, '#9999ff');
-
-
-		line2.start.x = groups[2].player.x + 15;
-		line2.start.y = groups[2].player.y + 40;
-		line2.end.x = groups[2].player.x + 15;
-		line2.end.y = groups[2].player.y + 0;
-
-		p = line2.intersects(line1, true);
-
-		lights[1].visible = false;
-		if (p) {
-			lights[1].visible = true;
-			var outgoing = line2.reflect(line1);
-
-			reflection.fromAngle(p.x, p.y, outgoing, 200);
-
-			line1.start.x = reflection.start.x;
-			line1.start.y = reflection.start.y;
-
-			line3 = new Phaser.Line(reflection.start.x, reflection.start.y, reflection.end.x, reflection.end.y);
-
-			lights[1].x = line3.start.x;
-			lights[1].y = line3.start.y;
-			lights[1].angle = Math.atan2((line3.end.y - line3.start.y), (line3.end.x - line3.start.x)) * 180 / Math.PI - 90;
-			lights[1].height = line3.length;
-
-			//game.debug.geom(line3, '#ffff00');
-		}
-		else {
-			line1.start.x = handle1.x;
-			line1.start.y = handle1.y;
-
+	for (var i = 0; i < lines.length; i++) {
+		if(isReflecting){
+			p = lines[0].intersects(reflector[0]);
+			if(p){
+				lines[0].end.y = p.y;
+				var side = groups[playing].player.scale.x / Math.abs(groups[playing].player.scale.x)
+				lines[1].start.x = p.x;
+				lines[1].start.y = p.y
+				lines[1].end.y = p.y;
+				lines[1].end.x = side * -1000;
+			}
+		}else{
+			lines[0].end.y = 640;
+			lines[1].start.x = 0;
+			lines[1].start.y = 0
+			lines[1].end.y = 0;
+			lines[1].end.x = 0;
 		}
 
-		lights[0].x = line1.end.x;
-		lights[0].y = line1.end.y;
-		lights[0].angle = -(180/Math.PI) * line1.angle + 5.5;
-		lights[0].height = line1.length;
+		p = lines[1].intersects(reflector[1]);
+		if(p && isPressed){
+			cristal.animations.play('glow');
+		}else{
+			cristal.animations.play('stop');
+		}
+
+		for (var j = 0; j < linebounds.length; j++) {
+			p = lines[i].intersects(linebounds[j]);
+			if(p){
+				lines[i].end.x = p.x;
+				lines[i].end.y = p.y;
+			}
+		}
+		if(isPressed){
+			lights[i].x = lines[i].start.x;
+			lights[i].y = lines[i].start.y;
+			lights[i].height = lines[i].length;
+			lights[i].angle = Math.atan2((lines[i].end.y - lines[i].start.y), (lines[i].end.x - lines[i].start.x)) * 180 / Math.PI - 90;
+		}else{
+			lights[i].height=0;
+		}
+	}
+
 }
+
 function gameAnimations(){
 
 	for(var i = 0; i < 3; i++){
 		if( groups[i].player.body.velocity.x == 0 && standAnim) groups[i].player.animations.play('stand');
 		if( !groups[i].player.body.touching.down ) groups[i].player.animations.play('jump');
 	}
+}
 
+function audioControll(){
+	if(playing==0){
+		if(!torchSound.isPlaying) torchSound.loopFull(2.0);
+
+	}else{
+		torchSound.pause();
+	}
 }
 
 function actionControll(){
-// Mechanical action
 		if(cursors.action.isDown){
 				switch (playing) {
-					case 0:
-						if(!isFiring && groups[playing].player.body.touching.down && canFire){
-							groups[playing].player.animations.play('fire');
-							isFiring = true;
-							canFire = false;
-							standAnim = false;
-							canMove = false;
-							fireAnimationTime = 0;
-						}
-						break;
 					case 1:
 						if(!isShooting && groups[playing].player.body.touching.down && groups[playing].player.body.velocity.x == 0 && canShoot){
 							groups[playing].player.animations.play('shoot');
@@ -357,12 +476,14 @@ function actionControll(){
 							standAnim = false;
 							canMove = false;
 							shootAnimationTime = 0;
+							//game.sound.play('arrow');
+							arrowShootAudio.play('',0,8,false,true);
 						}
 						break;
 					case 2:
 					if(groups[playing].player.body.touching.down && groups[playing].player.body.velocity.x == 0 && canDefend){
 						isReflecting = !isReflecting;
-						//canMove = !canMove;
+						canMove = !canMove;
 						standAnim = !standAnim;
 						canDefend = false;
 						reflectAnimationTime = 0;
@@ -428,16 +549,20 @@ function switchPlayer(){
 			groups[playing].player.body.velocity.x = 0;
 			playing = 0;
 			enemy.body.velocity.x = 0;
+			//audioControll();
 		} else if (cursors.change[1].isDown) {
 			groups[playing].player.body.velocity.x = 0;
 			playing = 1;
-			enemy.body.velocity.x=150;
+			enemyStart();
+			//audioControll();
 		} else if (cursors.change[2].isDown) {
 			groups[playing].player.body.velocity.x = 0;
 			playing = 2;
 			enemy.body.velocity.x = 0;
+			//audioControll();
 		}
 }
+
 function movementControll(){
 		// Move left & right
 		if (cursors.left.isDown && canMove) {
@@ -452,13 +577,15 @@ function movementControll(){
 
 		//  Jump
 		if (cursors.up.isDown && groups[playing].player.body.touching.down && canMove){
-			groups[playing].player.body.velocity.y = -450;
+			groups[playing].player.body.velocity.y = -350;
 		}
 	}
 
 function actionStatusControll(){
 	if(isShooting || !canShoot) {
 				shootAnimationTime += game.time.elapsed;
+
+
 
 				if(isShooting && shootAnimationTime > 600){
 					a.body.velocity.x *= -500;
@@ -470,17 +597,7 @@ function actionStatusControll(){
 				}
 			}
 
-			if(isFiring || !canFire) {
-				fireAnimationTime += game.time.elapsed;
-
-				if(isFiring && fireAnimationTime > 800){
-					isFiring = false;
-					standAnim = true;
-					canMove = true;
-					canFire= true;
-				}
-			}
-
+			
 			if(!canDefend) {
 				reflectAnimationTime += game.time.elapsed;
 

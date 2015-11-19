@@ -1,3 +1,4 @@
+var sound;
 var menuState = {
 
   photos : [],
@@ -6,6 +7,9 @@ var menuState = {
   keypress : null,
 
   create: function(){
+
+    sound=game.add.audio('intro',true);
+    
     
     var bg = game.add.sprite(0,0,'storyBG');
 
@@ -51,10 +55,20 @@ var menuState = {
 
     //var nameLabel = game.add.text(80,80,'RBG',{font:'50px Arial',fill:'#ffffff'});
     this.keypress = game.input.keyboard.addKey(Phaser.Keyboard.Z);
-    this.keypress.onDown.addOnce(this.skip,this);
+    
+    //sound.play(0,0,1.0,true,true);
+     this.keypress.onDown.addOnce(this.skip,this);
+  },
+
+  update: function(){
+   
+    //sound.play(0,0,1.0,true,true);
+    if(!sound.isPlaying) sound.loopFull(1.0);
+
   },
 
   start: function(){
+    sound.stop();
     game.state.start('play');
   },
 
@@ -69,4 +83,5 @@ var menuState = {
 
     this.keypress.onDown.addOnce(this.start,this);
   }
+  
 }
