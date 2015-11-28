@@ -3,6 +3,20 @@ var fs = require('fs');
 
 var bootState = {
   preload : function(){
+    this.game.stateTransition = game.plugins.add(Phaser.Plugin.StateTransition);
+
+  this.game.stateTransition.configure({
+    duration: Phaser.Timer.SECOND * 0.8,
+    ease: Phaser.Easing.Exponential.InOut,
+    properties: {
+      alpha: 0,
+      scale: {
+        x: 1.4,
+        y: 1.4
+      }
+    }
+  });
+
     game.load.spritesheet('back','../../assets/img/BG.png', 2662, 356);
   	game.load.spritesheet('ground','../../assets/img/Ground.png',1600,77);
   	game.load.spritesheet('hero0', '../../assets/img/HeroRed.png',62, 71);
@@ -27,6 +41,7 @@ var bootState = {
     game.load.image('arrow','../../assets/img/arrow.png');
     game.load.image('lfx','../../assets/img/Light.png');
     game.load.image('lbeam','../../assets/img/Beam.png');
+    game.load.image('mykey','../../assets/img/mykey.png');
 
     game.load.image('logo','../../assets/img/Logo.png');
     game.load.spritesheet('story', '../../assets/img/StorySlides.png', 392, 452);
@@ -50,6 +65,6 @@ var bootState = {
 		filters[1] = game.add.filter('BlurX');
 		filters[2] = game.add.filter('BlurY');
 
-    game.state.start('menu');
+    game.state.start('play2');
   }
 }

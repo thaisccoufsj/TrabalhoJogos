@@ -69,7 +69,7 @@ var menuState = {
 
   start: function(){
     sound.stop();
-    game.state.start('play');
+    game.state.start('play2');
   },
 
   skip: function(){
